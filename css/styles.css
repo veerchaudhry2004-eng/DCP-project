@@ -209,7 +209,7 @@ body { padding-top: 60px; }
 
 .card-front {
   background: rgba(255, 255, 255, 0.5);
-  padding: 30px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -217,12 +217,12 @@ body { padding-top: 60px; }
 .card-content {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 6px;
   font-size: 13.28px;
   line-height: 1.4;
 }
 .card-front .field-row {
-  margin-top: 5px;
+  margin-top: 0;
 }
 .card-front .field-label {
   display: block;
