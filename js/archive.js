@@ -49,11 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
         'position:fixed;top:-9999px;left:-9999px;visibility:hidden;' +
         `width:${cardW - 40}px;` +
         'font-family:\'Andale Mono\',\'Courier New\',monospace;' +
-        'line-height:1.4;font-size:10.1px;';
+        'line-height:1.4;font-size:9.6px;';
       probe.innerHTML = content.innerHTML;
       document.body.appendChild(probe);
 
-      let size = 10.1;
+      let size = 9.6;
       while (probe.scrollHeight > availH && size > 6.5) {
         size -= 0.25;
         probe.style.fontSize = size + 'px';
