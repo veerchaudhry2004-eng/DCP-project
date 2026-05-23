@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Statement — DCP</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="nav-overlay" id="nav-overlay">
+    <a href="project-statement.html">Project Statement</a>
+    <a href="archive.html">The Archive</a>
+    <a href="made-in.html">Made-in</a>
+    <a href="resides-in.html">Resides-in</a>
+    <a href="reading-list.html">Reading List</a>
+    <a href="upload.html">Upload</a>
+  </nav>
+
+  <main>
+    <h2 class="page-title">Project Statement</h2>
+    <div class="statement-body">
+      <div id="statement-display"></div>
+      <textarea id="statement-editor" placeholder="Write your project statement here…"></textarea>
+    </div>
+  </main>
+
+  <button class="float-btn" id="edit-btn">Edit</button>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    const DEFAULT_STATEMENT = `What looks good? What feels good? What is good?
+
+The objects that surround us all in daily life carry some meaning, whether personally, societally or morally. Where do the assumptions we make about the moral and ethical ramifications of objects come from.
+
+Why are some objects deemed good or bad. Does it come down to materiality, aesthetics or societal judgement. Do we as individuals choose to curate the objects in our home with regard to what we choose to show and what we choose to hide from visitors.
+
+This project is intended to investigate what we are comfortable with others seeing and what we feel uncomfortable with others seeing by challenging the viewer to judge an object based on the facts that it is comprised of while also judging the object in absence of the facts and information that one would usually use to judge it. It looks at objects in the home, 'good' or 'bad' and prompts one to judge them on either the facts or what they physically represent as and come to their own conclusions about the moral and ethical values of the object. It empowers the viewer to come to their own conclusions without the inherent biases associated with traditional curation, installation and displays of objects.
+
+In short, what is good and what is not.`;
+
+    const display  = document.getElementById('statement-display');
+    const editor   = document.getElementById('statement-editor');
+    const editBtn  = document.getElementById('edit-btn');
+    let   editing  = false;
+
+    function showText(text) {
+      const src = text || DEFAULT_STATEMENT;
+      display.innerHTML = src.split('\n\n')
+        .map(p => p.trim())
+        .filter(Boolean)
+        .map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`)
+        .join('');
+      display.classList.remove('empty');
+    }
+
+    function enterEdit() {
+      editing = true;
+      editor.value  = editor.value || display.innerText || DEFAULT_STATEMENT;
+      editor.style.display  = 'block';
+      display.style.display = 'none';
+      editBtn.textContent   = 'Save';
+      editor.focus();
+    }
+
+    async function saveEdit() {
+      editing = false;
+      const text = editor.value.trim();
+      try {
+        await DCP.saveStatement(text);
+      } catch (_) { /* Firebase not yet configured — still shows locally */ }
+      editor.style.display  = 'none';
+      display.style.display = 'block';
+      editBtn.textContent   = 'Edit';
+      showText(text);
+    }
+
+    editBtn.addEventListener('click', () => {
+      if (editing) saveEdit(); else enterEdit();
+    });
+
+    // Load from Firestore, fall back to default
+    (async () => {
+      try {
+        const saved = await DCP.getStatement();
+        showText(saved || '');
+      } catch (_) {
+        showText('');
+      }
+    })();
+  </script>
+</body>
+</html>

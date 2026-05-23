@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Made-in — DCP</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="nav-overlay" id="nav-overlay">
+    <a href="project-statement.html">Project Statement</a>
+    <a href="archive.html">The Archive</a>
+    <a href="made-in.html">Made-in</a>
+    <a href="resides-in.html">Resides-in</a>
+    <a href="reading-list.html">Reading List</a>
+    <a href="upload.html">Upload</a>
+  </nav>
+
+  <h2 class="page-title">Made-in</h2>
+  <div class="map-wrap" id="map-wrap">
+    <svg id="world-map"></svg>
+    <div class="map-popup" id="map-popup"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson@3/dist/topojson.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/map.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const entries = await DCP.getEntries();
+        const pins = entries.filter(e => e.madeIn && e.madeIn.lat != null);
+        initWorldMap('world-map', { mode: 'view', pins, locationKey: 'madeIn' });
+      } catch (err) {
+        console.error('Could not load entries:', err);
+        initWorldMap('world-map', { mode: 'view', pins: [] });
+      }
+    });
+  </script>
+</body>
+</html>
