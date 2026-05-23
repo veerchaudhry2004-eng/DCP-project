@@ -176,14 +176,14 @@ body { padding-top: 60px; }
   grid-template-columns: repeat(3, 1fr);
   border-left: 2px solid #ce0a16;
   border-top: 2px solid #ce0a16;
-  margin: 0 60px;
+  margin: 0 120px;
 }
 
 .archive-card {
   perspective: 1200px;
   cursor: pointer;
   position: relative;
-  height: 460px;
+  height: 380px;
 }
 
 .card-inner {
@@ -209,7 +209,7 @@ body { padding-top: 60px; }
 
 .card-front {
   background: rgba(255, 255, 255, 0.5);
-  padding: 20px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -218,7 +218,7 @@ body { padding-top: 60px; }
   display: flex;
   flex-direction: column;
   gap: 0;
-  font-size: 15px;
+  font-size: 17.25px;
   line-height: 1.4;
 }
 .card-front .field-row {

@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!fronts.length) return;
 
     const cardW = fronts[0].closest('.archive-card').offsetWidth || 220;
-    const availH = 420; // 460px card height minus 40px padding
+    const availH = 300; // 380px card height minus 80px padding
 
     fronts.forEach(front => {
       const content = front.querySelector('.card-content');
@@ -47,13 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const probe = document.createElement('div');
       probe.style.cssText =
         'position:fixed;top:-9999px;left:-9999px;visibility:hidden;' +
-        `width:${cardW - 40}px;` +
+        `width:${cardW - 80}px;` +
         'font-family:\'Andale Mono\',\'Courier New\',monospace;' +
-        'line-height:1.4;font-size:9.6px;';
+        'line-height:1.4;font-size:17.25px;';
       probe.innerHTML = content.innerHTML;
       document.body.appendChild(probe);
 
-      let size = 9.6;
+      let size = 17.25;
       while (probe.scrollHeight > availH && size > 6.5) {
         size -= 0.25;
         probe.style.fontSize = size + 'px';
