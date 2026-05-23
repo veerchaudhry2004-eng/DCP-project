@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!fronts.length) return;
 
     const cardW = fronts[0].closest('.archive-card').offsetWidth || 220;
-    const availH = 280; // 300px card height minus 20px padding
+    const availH = 420; // 460px card height minus 40px padding
 
     fronts.forEach(front => {
       const content = front.querySelector('.card-content');
