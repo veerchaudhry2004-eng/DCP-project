@@ -12,42 +12,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function buildInfoHTML(entry) {
     const fields = [
-      ['Owner Age',      entry.ownerAge],
-      ['Education',      entry.ownerEducation],
-      ['Material',       entry.objectMaterial],
-      ['Source',         entry.objectSource],
-      ['Made in',        entry.placeOfManufacture],
-      ['Acquired',       entry.acquisitionDate],
-      ['Location',       entry.permanentLocation],
-      ['Cost',           entry.cost],
+      ['Owner Age:',           entry.ownerAge],
+      ['Owner Education:',     entry.ownerEducation],
+      ['Object Material:',     entry.objectMaterial],
+      ['Object Source:',       entry.objectSource],
+      ['Place of Manufacture:', entry.placeOfManufacture],
+      ['Acquisition Date:',    entry.acquisitionDate],
+      ['Permanent Location:',  entry.permanentLocation],
+      ['Cost:',                entry.cost],
     ].filter(([, v]) => v && String(v).trim());
 
     if (!fields.length) {
-      return '<div class="card-content"><div style="opacity:0.35;font-style:italic;font-size:0.72rem;">No details added</div></div>';
+      return '<div class="card-content"><span style="opacity:0.35;font-style:italic;">No details added</span></div>';
     }
-    return '<div class="card-content">' + fields.map(([label, value]) => `
-      <div class="field-row">
-        <span class="field-label">${label}</span>
-        ${value}
-      </div>`).join('') + '</div>';
+    return '<div class="card-content">' +
+      fields.map(([label, value]) =>
+        `<div class="field-row"><span class="field-label">${label}</span><span class="field-value">${value}</span></div>`
+      ).join('') +
+    '</div>';
   }
 
+  // Measure content in an off-screen probe (outside 3D transform context) to find the right font size
   function fitCardFronts() {
-    grid.querySelectorAll('.card-front').forEach(front => {
+    const fronts = grid.querySelectorAll('.card-front');
+    if (!fronts.length) return;
+
+    const cardW = fronts[0].closest('.archive-card').offsetWidth || 220;
+    const availH = 280; // 300px card height minus 20px padding
+
+    fronts.forEach(front => {
       const content = front.querySelector('.card-content');
       if (!content) return;
-      // Reset
-      content.style.transform = '';
-      content.style.width = '';
-      const frontH = front.clientHeight;
-      if (!frontH) return;
-      const contentH = content.offsetHeight; // natural height, unaffected by parent overflow:hidden
-      if (contentH > frontH) {
-        const scale = frontH / contentH;
-        content.style.transformOrigin = 'top left';
-        content.style.transform = `scale(${scale})`;
-        content.style.width = Math.round(100 / scale) + '%';
+
+      const probe = document.createElement('div');
+      probe.style.cssText =
+        'position:fixed;top:-9999px;left:-9999px;visibility:hidden;' +
+        `width:${cardW - 20}px;` +
+        'font-family:\'Andale Mono\',\'Courier New\',monospace;' +
+        'line-height:1.4;font-size:11.5px;';
+      probe.innerHTML = content.innerHTML;
+      document.body.appendChild(probe);
+
+      let size = 11.5;
+      while (probe.scrollHeight > availH && size > 6.5) {
+        size -= 0.25;
+        probe.style.fontSize = size + 'px';
       }
+      document.body.removeChild(probe);
+      content.style.fontSize = size + 'px';
     });
   }
 
@@ -119,23 +131,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       grid.appendChild(card);
     });
+
+    setTimeout(fitCardFronts, 50);
   }
 
   toggleInput.addEventListener('change', () => {
     globalMode = toggleInput.checked ? 'image' : 'info';
     individuallyFlipped.clear();
-    // Re-apply flip state to existing cards without full re-render
     grid.querySelectorAll('.archive-card').forEach(card => {
       const id = card.dataset.id;
       card.querySelector('.card-inner').classList.toggle('flipped', cardShowsImage(id));
     });
   });
 
-  // Real-time listener — archive updates live when anyone uploads
-  DCP.onEntries(entries => {
-    renderGrid(entries);
-    setTimeout(fitCardFronts, 100);
-  });
-
   window.addEventListener('resize', fitCardFronts);
+
+  DCP.onEntries(renderGrid);
 });

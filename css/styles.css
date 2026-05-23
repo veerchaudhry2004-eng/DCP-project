@@ -212,17 +212,30 @@ body { padding-top: 60px; }
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  overflow: hidden;
 }
-.card-front .field-row {
-  font-size: 0.72rem;
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 11.5px;
   line-height: 1.4;
 }
+.card-front .field-row {
+  margin-top: 5px;
+}
 .card-front .field-label {
-  opacity: 0.6;
-  font-size: 0.85em;
   display: block;
-  margin-top: 4px;
+  font-family: 'Didot', 'GFS Didot', Georgia, serif;
+  font-style: italic;
+  font-size: 1em;
+  color: #ce0a16;
+}
+.card-front .field-value {
+  display: block;
+  font-family: 'Andale Mono', 'Courier New', monospace;
+  font-size: 1em;
+  color: #ce0a16;
 }
 
 .card-back {
