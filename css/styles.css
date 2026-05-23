@@ -13,6 +13,34 @@ body {
   min-height: 100vh;
 }
 
+/* ── Site title button ── */
+.site-title-btn {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px 80px;
+  font-family: 'Didot', 'GFS Didot', 'Bodoni MT', Georgia, serif;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #ce0a16;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  background: #99daff;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(206,10,22,0.15);
+  transition: opacity 0.2s;
+}
+.site-title-btn:hover { opacity: 0.7; }
+
+/* Push page content below the fixed title bar */
+body { padding-top: 60px; }
+
 /* ── Hamburger ── */
 .hamburger {
   position: fixed;
