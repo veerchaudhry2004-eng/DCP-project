@@ -11,10 +11,16 @@ const DCP = {
   onEntries(callback) {
     return db.collection('entries')
       .orderBy('createdAt', 'desc')
-      .onSnapshot(snap => {
-        const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        callback(entries);
-      });
+      .onSnapshot(
+        snap => {
+          const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          callback(entries);
+        },
+        err => {
+          console.error('Firestore listener error:', err);
+          this.getEntries().then(callback).catch(e => console.error('Fallback getEntries failed:', e));
+        }
+      );
   },
 
   async saveEntry(entryData) {

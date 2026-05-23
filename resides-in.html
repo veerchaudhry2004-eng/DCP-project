@@ -37,15 +37,12 @@
   <script src="js/nav.js"></script>
   <script src="js/map.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        const entries = await DCP.getEntries();
+    document.addEventListener('DOMContentLoaded', () => {
+      const map = initWorldMap('world-map', { mode: 'view', pins: [], locationKey: 'residesIn' });
+      DCP.onEntries(entries => {
         const pins = entries.filter(e => e.residesIn && e.residesIn.lat != null);
-        initWorldMap('world-map', { mode: 'view', pins, locationKey: 'residesIn' });
-      } catch (err) {
-        console.error('Could not load entries:', err);
-        initWorldMap('world-map', { mode: 'view', pins: [] });
-      }
+        map.updatePins(pins, 'residesIn');
+      });
     });
   </script>
 </body>

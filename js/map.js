@@ -28,6 +28,10 @@ function initWorldMap(svgId, options) {
 
   const worldUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
+  let pinsGroup = null;
+  let pendingPins = null;
+  let pendingLocationKey = locationKey;
+
   d3.json(worldUrl).then(world => {
     const countries = topojson.feature(world, world.objects.countries);
 
@@ -38,10 +42,13 @@ function initWorldMap(svgId, options) {
       .append('path')
       .attr('d', pathGen);
 
-    const pinsGroup = svg.append('g').attr('class', 'pins');
+    pinsGroup = svg.append('g').attr('class', 'pins');
 
     if (mode === 'view') {
-      renderViewPins(svg, pinsGroup, projection, pins, container, onPinClick, options.locationKey);
+      const initialPins = pendingPins !== null ? pendingPins : pins;
+      const initialKey  = pendingPins !== null ? pendingLocationKey : locationKey;
+      renderViewPins(svg, pinsGroup, projection, initialPins, container, onPinClick, initialKey);
+      pendingPins = null;
     } else if (mode === 'select') {
       renderSelectMode(svg, pinsGroup, projection, onLocationSelected);
     }
@@ -49,7 +56,20 @@ function initWorldMap(svgId, options) {
     console.error('Failed to load world map data:', err);
   });
 
-  return { svg, projection };
+  function updatePins(newPins, newLocKey) {
+    const key = newLocKey || locationKey;
+    if (!pinsGroup) {
+      pendingPins = newPins;
+      pendingLocationKey = key;
+      return;
+    }
+    pinsGroup.selectAll('*').remove();
+    const popup = document.getElementById('map-popup');
+    if (popup) popup.classList.remove('visible');
+    renderViewPins(svg, pinsGroup, projection, newPins, container, onPinClick, key);
+  }
+
+  return { svg, projection, updatePins };
 }
 
 function pinPath(x, y, scale) {
@@ -89,9 +109,10 @@ function renderViewPins(svg, pinsGroup, projection, pins, container, onPinClick,
 
       if (popup) {
         popup.innerHTML = '';
-        if (pin.imageData) {
+        const imgSrc = pin.imageUrl || pin.imageData;
+        if (imgSrc) {
           const img = document.createElement('img');
-          img.src = pin.imageData;
+          img.src = imgSrc;
           popup.appendChild(img);
         } else {
           popup.textContent = loc.label || 'No image';
