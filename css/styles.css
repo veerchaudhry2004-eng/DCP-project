@@ -90,7 +90,7 @@ body {
 }
 .home-questions h1 {
   font-family: 'Didot', 'GFS Didot', 'Bodoni MT', Georgia, serif;
-  font-style: italic;
+  font-style: normal;
   font-weight: bold;
   font-size: 3rem;
   color: #ce0a16;
