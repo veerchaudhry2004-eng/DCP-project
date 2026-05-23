@@ -416,6 +416,14 @@ body { padding-top: 60px; }
   margin-bottom: 36px;
   position: relative;
 }
+.reading-entry-title a {
+  color: #ce0a16;
+  text-decoration: none;
+  font-family: 'Didot', 'GFS Didot', 'Bodoni MT', Georgia, serif;
+  font-style: italic;
+}
+.reading-entry-title a:hover { text-decoration: underline; }
+
 .reading-entry-title {
   font-family: 'Didot', 'GFS Didot', 'Bodoni MT', Georgia, serif;
   font-style: italic;
