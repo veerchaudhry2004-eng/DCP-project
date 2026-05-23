@@ -1,5 +1,4 @@
 // Shared D3 world map renderer
-// mode: 'view' (shows clickable pins with popups) | 'select' (click to place pin)
 function initWorldMap(svgId, options) {
   const {
     mode = 'view',
@@ -26,31 +25,61 @@ function initWorldMap(svgId, options) {
 
   const pathGen = d3.geoPath().projection(projection);
 
+  // Single group that zoom transforms are applied to
+  const mapG = svg.append('g').attr('class', 'map-g');
+
+  // D3 zoom
+  const zoomBehavior = d3.zoom()
+    .scaleExtent([0.5, 12])
+    .on('zoom', event => {
+      mapG.attr('transform', event.transform);
+    });
+
+  svg.call(zoomBehavior).on('dblclick.zoom', null);
+
+  // Zoom buttons
+  const zoomWrap = document.createElement('div');
+  zoomWrap.className = 'map-zoom-wrap';
+  zoomWrap.innerHTML =
+    '<button class="map-zoom-btn" id="zoom-in-' + svgId + '">+</button>' +
+    '<button class="map-zoom-btn" id="zoom-out-' + svgId + '">−</button>';
+  container.appendChild(zoomWrap);
+
+  document.getElementById('zoom-in-' + svgId).addEventListener('click', () => {
+    svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.5);
+  });
+  document.getElementById('zoom-out-' + svgId).addEventListener('click', () => {
+    svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.67);
+  });
+
   const worldUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
   let pinsGroup = null;
   let pendingPins = null;
   let pendingLocationKey = locationKey;
+  let currentTransform = d3.zoomIdentity;
+
+  zoomBehavior.on('zoom.track', event => { currentTransform = event.transform; });
 
   d3.json(worldUrl).then(world => {
     const countries = topojson.feature(world, world.objects.countries);
 
-    svg.append('g').attr('class', 'countries')
+    mapG.append('g').attr('class', 'countries')
       .selectAll('path')
       .data(countries.features)
       .enter()
       .append('path')
       .attr('d', pathGen);
 
-    pinsGroup = svg.append('g').attr('class', 'pins');
+    pinsGroup = mapG.append('g').attr('class', 'pins');
 
     if (mode === 'view') {
       const initialPins = pendingPins !== null ? pendingPins : pins;
       const initialKey  = pendingPins !== null ? pendingLocationKey : locationKey;
-      renderViewPins(svg, pinsGroup, projection, initialPins, container, onPinClick, initialKey);
+      renderViewPins(svg, pinsGroup, projection, initialPins, container, onPinClick, initialKey, () => currentTransform);
       pendingPins = null;
     } else if (mode === 'select') {
-      renderSelectMode(svg, pinsGroup, projection, onLocationSelected);
+      renderSelectMode(svg, mapG, pinsGroup, projection, onLocationSelected);
     }
   }).catch(err => {
     console.error('Failed to load world map data:', err);
@@ -66,19 +95,13 @@ function initWorldMap(svgId, options) {
     pinsGroup.selectAll('*').remove();
     const popup = document.getElementById('map-popup');
     if (popup) popup.classList.remove('visible');
-    renderViewPins(svg, pinsGroup, projection, newPins, container, onPinClick, key);
+    renderViewPins(svg, pinsGroup, projection, newPins, container, onPinClick, key, () => currentTransform);
   }
 
   return { svg, projection, updatePins };
 }
 
-function pinPath(x, y, scale) {
-  scale = scale || 1;
-  const s = scale;
-  return `M${x},${y + 14 * s} C${x - 5 * s},${y + 6 * s} ${x - 10 * s},${y - 2 * s} ${x - 10 * s},${y - 8 * s} A${10 * s},${10 * s} 0 1 1 ${x + 10 * s},${y - 8 * s} C${x + 10 * s},${y - 2 * s} ${x + 5 * s},${y + 6 * s} ${x},${y + 14 * s} Z`;
-}
-
-function renderViewPins(svg, pinsGroup, projection, pins, container, onPinClick, locationKey) {
+function renderViewPins(svg, pinsGroup, projection, pins, container, onPinClick, locationKey, getTransform) {
   const popup = document.getElementById('map-popup');
 
   pins.forEach((pin, i) => {
@@ -91,20 +114,16 @@ function renderViewPins(svg, pinsGroup, projection, pins, container, onPinClick,
       .attr('class', 'map-pin-group')
       .attr('data-idx', i);
 
-    g.append('path')
-      .attr('class', 'pin-body')
-      .attr('d', pinPath(px, py, 0.9));
-
+    // Small solid circle pin
     g.append('circle')
-      .attr('class', 'pin-hole')
+      .attr('class', 'pin-body')
       .attr('cx', px)
-      .attr('cy', py - 8)
-      .attr('r', 3.5);
+      .attr('cy', py)
+      .attr('r', 4);
 
     g.on('click', function(event) {
       event.stopPropagation();
-      const allPins = pinsGroup.selectAll('.map-pin-group');
-      allPins.classed('dimmed', true);
+      pinsGroup.selectAll('.map-pin-group').classed('dimmed', true);
       d3.select(this).classed('dimmed', false);
 
       if (popup) {
@@ -121,17 +140,20 @@ function renderViewPins(svg, pinsGroup, projection, pins, container, onPinClick,
         }
         popup.classList.add('visible');
 
+        // Account for zoom transform when positioning popup
+        const t = getTransform ? getTransform() : d3.zoomIdentity;
         const svgEl = svg.node();
         const pt = svgEl.createSVGPoint();
-        pt.x = px; pt.y = py;
+        pt.x = t.applyX(px);
+        pt.y = t.applyY(py);
         const screenPt = pt.matrixTransform(svgEl.getScreenCTM());
-        const containerRect = container.getBoundingClientRect();
-        let left = screenPt.x - containerRect.left + 14;
-        let top = screenPt.y - containerRect.top - 90;
-        if (left + 140 > containerRect.width) left = screenPt.x - containerRect.left - 150;
-        if (top < 0) top = screenPt.y - containerRect.top + 20;
+        const rect = container.getBoundingClientRect();
+        let left = screenPt.x - rect.left + 14;
+        let top  = screenPt.y - rect.top  - 90;
+        if (left + 140 > rect.width)  left = screenPt.x - rect.left - 150;
+        if (top < 0) top = screenPt.y - rect.top + 20;
         popup.style.left = left + 'px';
-        popup.style.top = top + 'px';
+        popup.style.top  = top  + 'px';
       }
 
       if (onPinClick) onPinClick(pin, px, py);
@@ -144,31 +166,21 @@ function renderViewPins(svg, pinsGroup, projection, pins, container, onPinClick,
   });
 }
 
-function renderSelectMode(svg, pinsGroup, projection, onLocationSelected) {
-  let selectedPin = null;
-
+function renderSelectMode(svg, mapG, pinsGroup, projection, onLocationSelected) {
   svg.style('cursor', 'crosshair');
 
-  svg.on('click', function(event) {
+  mapG.on('click', function(event) {
     const [mx, my] = d3.pointer(event);
     const coords = projection.invert([mx, my]);
     if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
 
-    const lng = coords[0];
-    const lat = coords[1];
-
     pinsGroup.selectAll('*').remove();
-
-    const g = pinsGroup.append('g').attr('class', 'selected-pin');
-    g.append('path')
+    pinsGroup.append('circle')
       .attr('class', 'modal-pin')
-      .attr('d', pinPath(mx, my, 0.9));
-    g.append('circle')
-      .attr('class', 'modal-pin-hole')
       .attr('cx', mx)
-      .attr('cy', my - 8)
-      .attr('r', 3.5);
+      .attr('cy', my)
+      .attr('r', 4);
 
-    if (onLocationSelected) onLocationSelected(lat, lng, mx, my);
+    if (onLocationSelected) onLocationSelected(coords[1], coords[0], mx, my);
   });
 }
