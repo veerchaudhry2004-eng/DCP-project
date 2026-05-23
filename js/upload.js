@@ -84,12 +84,11 @@ function resizeImage(dataUrl, maxW, maxH, callback) {
     if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    // Fill white so transparent areas become white (mix-blend-mode: multiply removes white on cards)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
-    callback(canvas.toDataURL('image/jpeg', 0.78));
+    // No white fill — preserve transparency so objects sit cleanly on the archive background
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    // WebP supports transparency and compresses better than PNG
+    const webp = canvas.toDataURL('image/webp', 0.85);
+    callback(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/png'));
   };
   img.src = dataUrl;
 }

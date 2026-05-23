@@ -23,22 +23,30 @@ document.addEventListener('DOMContentLoaded', () => {
     ].filter(([, v]) => v && String(v).trim());
 
     if (!fields.length) {
-      return '<div style="opacity:0.35;font-style:italic;font-size:0.72rem;">No details added</div>';
+      return '<div class="card-content"><div style="opacity:0.35;font-style:italic;font-size:0.72rem;">No details added</div></div>';
     }
-    return fields.map(([label, value]) => `
+    return '<div class="card-content">' + fields.map(([label, value]) => `
       <div class="field-row">
         <span class="field-label">${label}</span>
         ${value}
-      </div>`).join('');
+      </div>`).join('') + '</div>';
   }
 
   function fitCardFronts() {
-    grid.querySelectorAll('.card-front').forEach(el => {
-      el.style.fontSize = '';
-      let size = parseFloat(getComputedStyle(el).fontSize);
-      while (el.scrollHeight > el.clientHeight && size > 7) {
-        size -= 0.5;
-        el.style.fontSize = size + 'px';
+    grid.querySelectorAll('.card-front').forEach(front => {
+      const content = front.querySelector('.card-content');
+      if (!content) return;
+      // Reset
+      content.style.transform = '';
+      content.style.width = '';
+      const frontH = front.clientHeight;
+      if (!frontH) return;
+      const contentH = content.offsetHeight; // natural height, unaffected by parent overflow:hidden
+      if (contentH > frontH) {
+        const scale = frontH / contentH;
+        content.style.transformOrigin = 'top left';
+        content.style.transform = `scale(${scale})`;
+        content.style.width = Math.round(100 / scale) + '%';
       }
     });
   }
@@ -126,6 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Real-time listener — archive updates live when anyone uploads
   DCP.onEntries(entries => {
     renderGrid(entries);
-    requestAnimationFrame(fitCardFronts);
+    setTimeout(fitCardFronts, 100);
   });
+
+  window.addEventListener('resize', fitCardFronts);
 });
