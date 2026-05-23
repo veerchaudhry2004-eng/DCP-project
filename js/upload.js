@@ -6,18 +6,36 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('image-input').click();
   });
 
-  document.getElementById('image-input').addEventListener('change', e => {
+  document.getElementById('image-input').addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      resizeImage(ev.target.result, 900, 900, data => {
-        currentImageData = data;
-        document.getElementById('image-preview-img').src = data;
-        document.getElementById('image-drop-zone').classList.add('has-image');
-      });
-    };
-    reader.readAsDataURL(file);
+
+    const zone = document.getElementById('image-drop-zone');
+    zone.classList.add('processing');
+    setStatus('Removing background…');
+
+    try {
+      const dataUrl = await removeBgAndResize(file);
+      currentImageData = dataUrl;
+      document.getElementById('image-preview-img').src = dataUrl;
+      zone.classList.remove('processing');
+      zone.classList.add('has-image');
+      setStatus('');
+    } catch (err) {
+      console.error('Image processing error:', err);
+      zone.classList.remove('processing');
+      setStatus('');
+      // Fallback: just resize original without background removal
+      const reader = new FileReader();
+      reader.onload = ev => {
+        resizeImage(ev.target.result, 900, 900, data => {
+          currentImageData = data;
+          document.getElementById('image-preview-img').src = data;
+          zone.classList.add('has-image');
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
   document.getElementById('upload-form').addEventListener('submit', async e => {
@@ -25,6 +43,38 @@ document.addEventListener('DOMContentLoaded', () => {
     await handleSubmit();
   });
 });
+
+// Remove background using @imgly/background-removal (free, runs in browser)
+async function removeBgAndResize(file) {
+  setStatus('Loading AI model… (first time only, please wait)');
+  const { removeBackground } = await import(
+    'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/index.mjs'
+  );
+
+  setStatus('Removing background…');
+  const resultBlob = await removeBackground(file, {
+    publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/',
+    progress: (key, current, total) => {
+      if (total > 0 && key.includes('fetch')) {
+        setStatus(`Loading AI model… ${Math.round((current / total) * 100)}%`);
+      }
+    },
+  });
+
+  // Convert blob → data URL → resize
+  const dataUrl = await blobToDataUrl(resultBlob);
+  setStatus('Processing…');
+  return new Promise(resolve => resizeImage(dataUrl, 900, 900, resolve));
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 function resizeImage(dataUrl, maxW, maxH, callback) {
   const img = new Image();
@@ -34,18 +84,21 @@ function resizeImage(dataUrl, maxW, maxH, callback) {
     if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const ctx = canvas.getContext('2d');
+    // Fill white so transparent areas become white (mix-blend-mode: multiply removes white on cards)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
     callback(canvas.toDataURL('image/jpeg', 0.78));
   };
   img.src = dataUrl;
 }
 
-// Geocode a place name → lat/lng using OpenStreetMap Nominatim (free, no key needed)
 async function geocode(query) {
   if (!query || !query.trim()) return null;
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'DCP-Website/1.0' } });
+    const res = await fetch(url);
     const data = await res.json();
     if (data && data.length > 0) {
       return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), label: query.trim() };
@@ -58,8 +111,8 @@ async function geocode(query) {
 
 function setStatus(msg, isError) {
   const el = document.getElementById('success-msg');
-  el.textContent = msg;
-  el.style.opacity = '1';
+  el.textContent = msg || '';
+  el.style.opacity = msg ? '1' : '0';
   el.style.color = isError ? '#ce0a16' : '';
 }
 
@@ -69,7 +122,7 @@ async function handleSubmit() {
   btn.textContent = 'Uploading…';
 
   try {
-    setStatus('Step 1/3: geocoding locations…');
+    setStatus('Geocoding locations…');
     const placeOfManufacture = document.getElementById('place-of-manufacture').value.trim();
     const permanentLocation  = document.getElementById('permanent-location').value.trim();
 
@@ -78,7 +131,7 @@ async function handleSubmit() {
       geocode(permanentLocation)
     ]);
 
-    setStatus('Step 2/3: uploading image…');
+    setStatus('Saving to archive…');
     const entry = {
       imageData:          currentImageData,
       ownerAge:           document.getElementById('owner-age').value.trim(),
@@ -93,10 +146,8 @@ async function handleSubmit() {
       residesIn,
     };
 
-    setStatus('Step 3/3: saving to database…');
     await DCP.saveEntry(entry);
 
-    // Reset
     document.getElementById('upload-form').reset();
     currentImageData = null;
     document.getElementById('image-drop-zone').classList.remove('has-image');
@@ -113,7 +164,9 @@ async function handleSubmit() {
 }
 
 function showSuccess() {
-  const msg = document.getElementById('success-msg');
-  msg.style.opacity = '1';
-  setTimeout(() => { msg.style.opacity = '0'; }, 3000);
+  const el = document.getElementById('success-msg');
+  el.textContent = 'Posted to the archive.';
+  el.style.opacity = '1';
+  el.style.color = '';
+  setTimeout(() => { el.style.opacity = '0'; }, 3000);
 }

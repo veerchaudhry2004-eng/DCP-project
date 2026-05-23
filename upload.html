@@ -71,6 +71,14 @@
     }
     #image-drop-zone.has-image:hover .change-photo-hint { display: block; }
 
+    #image-drop-zone.processing {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    #image-drop-zone.processing .drop-hint span::after {
+      content: '…';
+    }
+
     /* Form fields */
     .fields-section { display: flex; flex-direction: column; gap: 0; }
     .field-item {
