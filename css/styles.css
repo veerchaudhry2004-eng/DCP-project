@@ -335,9 +335,8 @@ body { padding-top: 60px; }
 /* ── MAPS ── */
 .map-zoom-wrap {
   position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 20px;
+  bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
