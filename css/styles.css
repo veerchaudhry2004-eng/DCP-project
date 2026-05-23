@@ -176,7 +176,7 @@ body { padding-top: 60px; }
   grid-template-columns: repeat(3, 1fr);
   border-left: 2px solid #ce0a16;
   border-top: 2px solid #ce0a16;
-  margin: 0 120px;
+  margin: 0 90px;
 }
 
 .archive-card {
@@ -209,7 +209,7 @@ body { padding-top: 60px; }
 
 .card-front {
   background: rgba(255, 255, 255, 0.5);
-  padding: 40px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -218,7 +218,7 @@ body { padding-top: 60px; }
   display: flex;
   flex-direction: column;
   gap: 0;
-  font-size: 17.25px;
+  font-size: 16.4px;
   line-height: 1.4;
 }
 .card-front .field-row {
