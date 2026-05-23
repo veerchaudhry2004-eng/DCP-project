@@ -218,7 +218,7 @@ body { padding-top: 60px; }
   display: flex;
   flex-direction: column;
   gap: 0;
-  font-size: 16.4px;
+  font-size: 14.76px;
   line-height: 1.4;
 }
 .card-front .field-row {
