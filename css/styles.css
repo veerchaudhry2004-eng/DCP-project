@@ -244,6 +244,24 @@ body { padding-top: 60px; }
   font-style: italic;
 }
 
+.card-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 10;
+  background: none;
+  border: none;
+  color: #ce0a16;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 2px 6px;
+}
+.archive-card:hover .card-delete-btn { opacity: 0.6; }
+.card-delete-btn:hover { opacity: 1 !important; }
+
 .archive-empty-msg {
   grid-column: 1 / -1;
   padding: 60px;

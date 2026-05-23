@@ -73,9 +73,21 @@ document.addEventListener('DOMContentLoaded', () => {
         back.appendChild(ph);
       }
 
+      // Delete button
+      const del = document.createElement('button');
+      del.className = 'card-delete-btn';
+      del.textContent = '×';
+      del.title = 'Delete entry';
+      del.addEventListener('click', async e => {
+        e.stopPropagation();
+        if (!confirm('Delete this entry?')) return;
+        try { await DCP.deleteEntry(entry.id); } catch (err) { alert('Delete failed: ' + err.message); }
+      });
+
       inner.appendChild(front);
       inner.appendChild(back);
       card.appendChild(inner);
+      card.appendChild(del);
 
       card.addEventListener('click', () => {
         if (individuallyFlipped.has(entry.id)) {
