@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fronts = grid.querySelectorAll('.card-front');
     if (!fronts.length) return;
 
-    const cardW = fronts[0].closest('.archive-card').offsetWidth || 220;
-    const availH = 332; // 380px card height minus 48px padding
+    const cardW = fronts[0].closest('.archive-card').offsetWidth || 300;
+    const availH = cardW - 48; // square card minus 24px padding top + bottom
 
     fronts.forEach(front => {
       const content = front.querySelector('.card-content');

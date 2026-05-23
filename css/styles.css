@@ -183,7 +183,7 @@ body { padding-top: 60px; }
   perspective: 1200px;
   cursor: pointer;
   position: relative;
-  height: 380px;
+  aspect-ratio: 1 / 1;
 }
 
 .card-inner {
