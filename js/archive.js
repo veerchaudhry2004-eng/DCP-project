@@ -32,6 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>`).join('');
   }
 
+  function fitCardFronts() {
+    grid.querySelectorAll('.card-front').forEach(el => {
+      el.style.fontSize = '';
+      let size = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollHeight > el.clientHeight && size > 7) {
+        size -= 0.5;
+        el.style.fontSize = size + 'px';
+      }
+    });
+  }
+
   function renderGrid(entries) {
     if (loader) loader.style.display = 'none';
     grid.innerHTML = '';
@@ -113,5 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Real-time listener — archive updates live when anyone uploads
-  DCP.onEntries(renderGrid);
+  DCP.onEntries(entries => {
+    renderGrid(entries);
+    requestAnimationFrame(fitCardFronts);
+  });
 });
