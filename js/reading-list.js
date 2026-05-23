@@ -49,6 +49,31 @@ const SEED_ENTRIES = [
     url: '',
     bullets: [],
   },
+  {
+    title: 'Matthew Mazzotta — Artist Website.',
+    url: 'https://www.matthewmazzotta.com',
+    bullets: [],
+  },
+  {
+    title: 'LACMA Collections — Object 28875.',
+    url: 'https://collections.lacma.org/object/28875',
+    bullets: [],
+  },
+  {
+    title: 'V&A: Rapid Response Collecting — An Introduction.',
+    url: 'https://www.vam.ac.uk/articles/rapid-response-collecting-an-introduction',
+    bullets: [],
+  },
+  {
+    title: 'South London Gallery: Michael Landy — Art Bin.',
+    url: 'https://www.southlondongallery.org/exhibitions/michael-landy-art-bin/',
+    bullets: [],
+  },
+  {
+    title: 'Katie Paterson: Afterlife.',
+    url: 'https://katiepaterson.org/artwork/afterlife/',
+    bullets: [],
+  },
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -63,10 +88,12 @@ async function loadList() {
   container.innerHTML = '<p style="opacity:0.4;font-style:italic;">Loading…</p>';
   try {
     const list = await DCP.getReadingList();
-    if (list.length === 0) {
-      await seedEntries();
-      const seeded = await DCP.getReadingList();
-      renderList(seeded);
+    const existingTitles = new Set(list.map(e => e.title));
+    const missing = SEED_ENTRIES.filter(e => !existingTitles.has(e.title));
+    if (missing.length > 0) {
+      await Promise.all(missing.map(e => DCP.addReadingEntry(e)));
+      const updated = await DCP.getReadingList();
+      renderList(updated);
     } else {
       renderList(list);
     }
@@ -96,9 +123,6 @@ function renderList(list) {
       ${(entry.bullets && entry.bullets.length)
         ? `<ul>${entry.bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`
         : ''}
-      <div class="reading-entry-controls">
-        <button class="entry-ctrl-btn" onclick="removeEntry('${entry.id}')">remove</button>
-      </div>
     </div>`).join('');
 }
 
