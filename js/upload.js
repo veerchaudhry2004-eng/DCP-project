@@ -96,7 +96,7 @@ async function handleSubmit() {
     showSuccess();
   } catch (err) {
     console.error('Upload failed:', err);
-    alert('Upload failed — check your connection and try again.');
+    alert('Upload failed: ' + (err.code || err.message || String(err)));
   } finally {
     btn.disabled = false;
     btn.textContent = 'Post';

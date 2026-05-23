@@ -28,10 +28,16 @@ const DCP = {
 
     // Upload base64 image to Storage, get back a URL
     if (entryData.imageData && entryData.imageData.startsWith('data:')) {
-      const filename = `images/${this.generateId()}.jpg`;
-      const imgRef = storage.ref(filename);
-      const snap = await imgRef.putString(entryData.imageData, 'data_url');
-      imageUrl = await snap.ref.getDownloadURL();
+      try {
+        const filename = `images/${this.generateId()}.jpg`;
+        const imgRef = storage.ref(filename);
+        const snap = await imgRef.putString(entryData.imageData, 'data_url');
+        imageUrl = await snap.ref.getDownloadURL();
+      } catch (storageErr) {
+        console.warn('Storage upload failed, saving without image URL:', storageErr.code, storageErr.message);
+        // Fall back: store the base64 data directly so the entry still saves
+        imageUrl = entryData.imageData;
+      }
     }
 
     const { imageData, ...rest } = entryData;
