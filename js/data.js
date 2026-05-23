@@ -24,26 +24,9 @@ const DCP = {
   },
 
   async saveEntry(entryData) {
-    let imageUrl = entryData.imageUrl || null;
-
-    // Upload base64 image to Storage, get back a URL
-    if (entryData.imageData && entryData.imageData.startsWith('data:')) {
-      try {
-        const filename = `images/${this.generateId()}.jpg`;
-        const imgRef = storage.ref(filename);
-        const snap = await imgRef.putString(entryData.imageData, 'data_url');
-        imageUrl = await snap.ref.getDownloadURL();
-      } catch (storageErr) {
-        console.warn('Storage upload failed, saving without image URL:', storageErr.code, storageErr.message);
-        // Fall back: store the base64 data directly so the entry still saves
-        imageUrl = entryData.imageData;
-      }
-    }
-
-    const { imageData, ...rest } = entryData;
+    // Store image as base64 directly in Firestore (no Storage needed)
     const doc = {
-      ...rest,
-      imageUrl,
+      ...entryData,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
 
@@ -51,14 +34,7 @@ const DCP = {
   },
 
   async deleteEntry(id) {
-    const docRef = db.collection('entries').doc(id);
-    const doc = await docRef.get();
-    if (doc.exists && doc.data().imageUrl) {
-      try {
-        await storage.refFromURL(doc.data().imageUrl).delete();
-      } catch (_) { /* image already gone */ }
-    }
-    await docRef.delete();
+    await db.collection('entries').doc(id).delete();
   },
 
   // ── Project Statement ─────────────────────────────────────────────────────

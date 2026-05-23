@@ -7,5 +7,4 @@ firebase.initializeApp({
   appId:             "1:804198568020:web:807207f5ddd618eaea9dc1"
 });
 
-const db      = firebase.firestore();
-const storage = firebase.storage();
+const db = firebase.firestore();
