@@ -47,13 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const probe = document.createElement('div');
       probe.style.cssText =
         'position:fixed;top:-9999px;left:-9999px;visibility:hidden;' +
-        `width:${cardW - 20}px;` +
+        `width:${cardW - 40}px;` +
         'font-family:\'Andale Mono\',\'Courier New\',monospace;' +
-        'line-height:1.4;font-size:9.2px;';
+        'line-height:1.4;font-size:10.1px;';
       probe.innerHTML = content.innerHTML;
       document.body.appendChild(probe);
 
-      let size = 9.2;
+      let size = 10.1;
       while (probe.scrollHeight > availH && size > 6.5) {
         size -= 0.25;
         probe.style.fontSize = size + 'px';
